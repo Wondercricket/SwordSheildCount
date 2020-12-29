@@ -1,0 +1,42 @@
+import re
+import os
+import requests
+from bs4 import BeautifulSoup
+
+sources = [
+    'https://www.serebii.net/swordshield/galarpokedex.shtml',
+    'https://www.serebii.net/swordshield/isleofarmordex.shtml',
+    'https://www.serebii.net/swordshield/thecrowntundradex.shtml',
+    'https://www.serebii.net/swordshield/pokemonnotindex.shtml',
+]
+names = {'galarpokedex': 'Galar', 'isleofarmordex': 'Isle of Armor', 'thecrowntundradex': 'Crowned Tundra',
+         'pokemonnotindex': 'Other'}
+
+in_dex = []
+out_dex = []
+all_pokemon = []
+for s in sources:
+    html = BeautifulSoup(requests.get(s).content, 'lxml')
+    pokemon = {str(h.attrs['href']) for h in html.find_all('a', href=re.compile('/pokedex-swsh/'))}
+    pokemon = {p.split('/')[2] for p in pokemon if not p.endswith(('.shtml', '.html')) and p != '/pokedex-swsh/'}
+    name = names[os.path.basename(s).replace('.shtml', '')]
+    all_pokemon.extend(pokemon)
+
+    print('{} Dex: {}'.format(name, len(pokemon)))
+
+    if name == 'Other':
+        out_dex.extend(pokemon)
+    else:
+        in_dex.extend(pokemon)
+
+all_pokemon = {*all_pokemon}
+in_dex = {*in_dex}
+out_dex = {*out_dex}
+
+print()
+print('Dex Entries: {}'.format(len(in_dex)))
+print('No Dex Entries: {}'.format(len(out_dex)))
+print('All Pokemon: {}'.format(len(all_pokemon)))
+
+for i in sorted(in_dex):
+    print(i)
