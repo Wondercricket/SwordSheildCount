@@ -37,6 +37,3 @@ print()
 print('Dex Entries: {}'.format(len(in_dex)))
 print('No Dex Entries: {}'.format(len(out_dex)))
 print('All Pokemon: {}'.format(len(all_pokemon)))
-
-for i in sorted(in_dex):
-    print(i)
