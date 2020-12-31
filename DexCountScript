@@ -8,15 +8,27 @@ sources = [
     'https://www.serebii.net/swordshield/isleofarmordex.shtml',
     'https://www.serebii.net/swordshield/thecrowntundradex.shtml',
     'https://www.serebii.net/swordshield/pokemonnotindex.shtml',
+    'https://www.serebii.net/swordshield/transferonly.shtml'
 ]
 names = {'galarpokedex': 'Galar', 'isleofarmordex': 'Isle of Armor', 'thecrowntundradex': 'Crowned Tundra',
-         'pokemonnotindex': 'Other'}
+         'pokemonnotindex': 'Other', 'transferonly': 'Transfer Only'}
 
 in_dex = []
 out_dex = []
 all_pokemon = []
 for s in sources:
-    html = BeautifulSoup(requests.get(s).content, 'lxml')
+    bn = os.path.basename(s)
+
+    if not os.path.exists(bn):
+        soup = BeautifulSoup(requests.get(s).content, 'lxml')
+
+        soup = str(soup.find('div', id='content')).encode('utf-8', errors='replace').decode()
+        with open(bn, 'w', encoding='utf-8', errors='replace') as o:
+            o.write(soup)
+
+    with open(bn, 'r', encoding='utf-8') as o:
+        html = BeautifulSoup(o.read(), 'lxml')
+
     pokemon = {str(h.attrs['href']) for h in html.find_all('a', href=re.compile('/pokedex-swsh/'))}
     pokemon = {p.split('/')[2] for p in pokemon if not p.endswith(('.shtml', '.html')) and p != '/pokedex-swsh/'}
     name = names[os.path.basename(s).replace('.shtml', '')]
@@ -24,14 +36,14 @@ for s in sources:
 
     print('{} Dex: {}'.format(name, len(pokemon)))
 
-    if name == 'Other':
+    if name in {'Other', 'Transfer Only'}:
         out_dex.extend(pokemon)
     else:
         in_dex.extend(pokemon)
 
-all_pokemon = {*all_pokemon}
-in_dex = {*in_dex}
-out_dex = {*out_dex}
+all_pokemon = sorted({*all_pokemon})
+in_dex = sorted({*in_dex})
+out_dex = sorted({*out_dex})
 
 print()
 print('Dex Entries: {}'.format(len(in_dex)))
